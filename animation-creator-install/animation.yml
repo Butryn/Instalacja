@@ -1,0 +1,43 @@
+- hosts: web_nodes
+  tasks:
+     - name: "install common dep"
+       yum:
+         name: "{{ item }}"  
+         state: present
+       become: yes
+       with_items:
+          - "git"
+          - "mc"
+          - "python36"
+          - "python36-pip"
+     - name: "set commit author"
+       raw: "git config --global user.{{ item.key }} '{{ item.value }}'"
+       with_items:
+          - {key: "email", value: "r.butryn@op.pl"}
+          - {key: "name", value: "Butryn"}
+     - name: "sync repo"
+       git: 
+         repo: https://github.com/Butryn/animation-creator-1.git
+         dest: ~/animation-creator
+     - name: "install python dependencies"
+       pip:
+         name: "{{ item }}"
+         executable: pip-3.6
+       become: yes
+       with_items: 
+          - "boto3"
+          - "pytest"
+          - "flask"
+          - "flask_bootstrap" 
+     - name: "Sys var PYTHONPATH"
+       lineinfile:
+         path: ~/.bashrc
+         line: "export PYTHONPATH=/home/ec2-user/animation-creator"
+     - name: "Sys var bucket name"
+       lineinfile:
+         path: ~/.bashrc
+         line: "export APP_BUCKET_NAME=butrynr-179849"
+     - name: "Add Queue Name"
+       lineinfile: 
+         path: ~/.bashrc
+         line: "export APP_QUEUE_NAME=Butryn"
